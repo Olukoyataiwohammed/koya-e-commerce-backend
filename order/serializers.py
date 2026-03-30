@@ -1,15 +1,16 @@
 from rest_framework import serializers
 from .models import Order, OrderItem
 from accounts.models import Address
+from cart.models import Cart, CartItem
 
 
 # -----------------------------------------
-# Address Serializer (FIXES address showing "4")
+# Address Serializer
 # -----------------------------------------
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ["id", "address"]  # adjust if you use street/city/etc
+        fields = ["id", "address"]
 
 
 # -----------------------------------------
@@ -43,10 +44,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
 
-    #  Show full address instead of ID
     address = AddressSerializer(read_only=True)
 
-    #  Accept address_id from frontend
     address_id = serializers.PrimaryKeyRelatedField(
         queryset=Address.objects.all(),
         source='address',
@@ -55,8 +54,6 @@ class OrderSerializer(serializers.ModelSerializer):
     )
 
     payment_method = serializers.ChoiceField(choices=Order.PAYMENT_CHOICES)
-
-    #  FIX total calculation
     total = serializers.SerializerMethodField()
 
     class Meta:
@@ -95,35 +92,51 @@ class OrderSerializer(serializers.ModelSerializer):
             'updated_at'
         ]
 
-    # -----------------------------------------
-    # ✅ FIX TOTAL (THIS FIXES ₦0.00)
-    # -----------------------------------------
+    # ✅ FIX TOTAL (includes shipping)
     def get_total(self, obj):
-        return sum(item.price * item.quantity for item in obj.items.all())
+        return obj.subtotal + obj.shipping_fee
 
 
     # -----------------------------------------
-    # CREATE ORDER
+    # CREATE ORDER (WITH CART ITEMS)
     # -----------------------------------------
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user if request else None
 
-        #  extract address
         address = validated_data.pop('address', None)
-
-        # If frontend sent new address object
-        if isinstance(address, dict):
-            address = Address.objects.create(user=user, **address)
 
         # Assign user
         if user and user.is_authenticated:
             validated_data['user'] = user
+            cart = Cart.objects.filter(user=user).first()
+        else:
+            session_key = request.session.session_key
+            validated_data['session_key'] = session_key
+            cart = Cart.objects.filter(session_key=session_key).first()
 
-        # Assign address properly
         validated_data['address'] = address
 
-       
         order = Order.objects.create(**validated_data)
+
+        # ✅ MOVE CART ITEMS → ORDER ITEMS
+        subtotal = 0
+
+        if cart:
+            for item in cart.items.all():
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    price=item.product.price,
+                    quantity=item.quantity
+                )
+                subtotal += item.product.price * item.quantity
+
+            # ✅ clear cart after order
+            cart.items.all().delete()
+
+        # ✅ SAVE SUBTOTAL
+        order.subtotal = subtotal
+        order.save()
 
         return order
