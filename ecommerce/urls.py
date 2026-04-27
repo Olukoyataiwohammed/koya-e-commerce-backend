@@ -17,6 +17,7 @@ urlpatterns = [
     path("auth/",include("accounts.urls")),
     path("order/",include("order.urls")),
     path("wishlist/", include("wishlist.urls")),
+    path("support/", include("support.urls")),
 ]
 
 
