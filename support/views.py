@@ -6,10 +6,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Message
 from .serializers import MessageSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 
 # 📩 GET all messages + POST new message
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def message_list_create(request):
     if request.method == 'GET':
         messages = Message.objects.all().order_by('-created_at')
@@ -26,6 +29,7 @@ def message_list_create(request):
 
 # 📩 GET single message (optional)
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def message_detail(request, pk):
     try:
         message = Message.objects.get(pk=pk)
