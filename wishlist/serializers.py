@@ -14,12 +14,7 @@ class WishlistSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Wishlist
-        fields = [
-            "id",
-            "product_id",
-            "product",
-            "created_at",
-        ]
+        fields = ["id", "product_id", "product", "created_at"]
         read_only_fields = ["id", "created_at"]
 
     def get_product(self, obj):
@@ -28,5 +23,5 @@ class WishlistSerializer(serializers.ModelSerializer):
             "id": product.id,
             "name": product.name,
             "price": product.price,
-            "image": product.image.url if product.image else None,
+            "image": product.image.url if getattr(product.image, "url", None) else None,
         }

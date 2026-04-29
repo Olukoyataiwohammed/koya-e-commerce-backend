@@ -38,3 +38,4 @@ def message_detail(request, pk):
 
     serializer = MessageSerializer(message)
     return Response(serializer.data)
+    
