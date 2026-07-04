@@ -42,9 +42,9 @@ A RESTful e-commerce backend built with Django and Django REST Framework. This A
 ## ⚙️ Installation
 
 ```bash
-git clone https://github.com/Olukoyataiwohammed/REPOSITORY_NAME.git
+https://github.com/Olukoyataiwohammed/koya-ecommerce-backend.git
 
-cd REPOSITORY_NAME
+cd koya-ecommerce-backend
 
 python -m venv venv
 
@@ -69,11 +69,9 @@ https://koya-ecommerce-frontend.vercel.app/
 
 **Frontend Repository**
 
-https://github.com/Olukoyataiwohammed/FRONTEND_REPOSITORY_NAME
+https://github.com/Olukoyataiwohammed/koya-ecommerce-frontend
 
-**Backend API**
 
-https://YOUR-PYTHONANYWHERE-USERNAME.pythonanywhere.com/
 
 ## 👨‍💻 Author
 
